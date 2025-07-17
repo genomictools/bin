@@ -93,13 +93,20 @@ def main():
         )
 
         tidy = variant_scorers.tidy_scores([variant_scores])
-        tidy["variant_id"] = variant_id
+        tidy["CHROM"] = str(record.chrom)
+        tidy["POS"]   = int(record.pos)
+        tidy["REF"]   = str(record.ref)
+        tidy["ALT"]   = str(record.alts[0])
+        tidy["ID"]    = variant_id
         results.append(tidy)
 
     # Concatenate all results and write to CSV
     if results:
         df = pd.concat(results, ignore_index=True)
-        df.to_csv(args.output, index=False, sep='|')
+        first_cols = ["CHROM", "POS", "REF", "ALT", "ID"]
+        other_cols = [col for col in df.columns if col not in first_cols]
+        df = df[first_cols + other_cols]
+        df.to_csv(args.output, index=False, sep='\t', na_rep='.')
         print(f"Results saved to {args.output}")
     else:
         print("No variants processed, no output written.")

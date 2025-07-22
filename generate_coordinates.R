@@ -6,11 +6,12 @@ args <- commandArgs(trailingOnly = TRUE)
 chrom   <- args[1]
 start   <- args[2]
 end     <- args[3]
-genome  <- args[4]
-style   <- args[5]
-coding  <- args[6]
-chunk   <- args[7]
-output  <- args[8]
+genelist<- args[4]
+genome  <- args[5]
+style   <- args[6]
+coding  <- args[7]
+chunk   <- args[8]
+output  <- args[9]
 
 # load genes
 if (genome == 'hg38') txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene::TxDb.Hsapiens.UCSC.hg38.knownGene
@@ -29,9 +30,15 @@ if ( start != 'null' && end != 'null') {
 }
 
 if ( coding == 'true' ) {
+  txdb_filter <- list(tx_chrom = chrom)
+  genelist <- readr::read_lines(genelist)
+  if (length(genelist) > 0) {
+    txdb_filter$gene_id <- genelist
+  }
+
   gene_coordinates <- GenomicFeatures::genes(
     txdb,
-    filter = list(tx_chrom = chrom),
+    filter = txdb_filter,
     columns = AnnotationDbi::columns(txdb)
   )
   gene_coordinates <- IRanges::subsetByOverlaps(gene_coordinates, q)

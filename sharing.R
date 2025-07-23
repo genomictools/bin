@@ -29,12 +29,14 @@ rlist <- tidyr::unite(rlist, samples, dplyr::starts_with('X'), sep = ' ')
 rlist <- dplyr::mutate(rlist, samples = purrr::map_chr(stringr::str_split(samples, ' '), ~{paste(intersect(cases, unlist(.x)), collapse = ',')}))
 rlist <- dplyr::select(rlist, variant, genotype, samples)
 rlist <- tidyr::pivot_wider(rlist, names_from = 'genotype', values_from = 'samples')
+rlist <- tidyr::unnest(rlist)
 
 cols <- c('HET', 'HOM')
 
 m <- as.data.frame(matrix(NA, ncol = length(cols)))
 names(m) <- cols
 rlist <- dplyr::left_join(rlist, m)
+rlist <- dplyr::mutate_all(rlist, ~ifelse(is.na(.x), '', .x))
 
 # pedigree
 clusters <- tibble::tibble(
@@ -66,7 +68,7 @@ res <- dplyr::left_join(res, carr)
 res <- dplyr::left_join(res, rlist)
 res <- dplyr::inner_join(res, anno)
 res <- dplyr::filter(res, !variant %in% blacklist)
-res <- tidyr::pivot_wider(res, values_from = c('mac', 'expected'), names_from = 'cluster')
+res <- tidyr::pivot_wider(res, values_from = c('mac', 'expected'), names_from = 'cluster', values_fn = unique)
 
 # order columns
 cols <- c(paste('expected', clusters$V2, sep = '_'),

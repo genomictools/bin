@@ -10,15 +10,15 @@ type        <- args[4]
 
 # read in the data
 files <- unlist(strsplit(sharing, ','))
-sharing <- purrr::map_df(files, readr::read_tsv)
+sharing <- purrr::map_df(files, readr::read_tsv, col_types = "cccccccccciiiiiiii")
 
 # classify
 res <- dplyr::mutate(sharing, sharing = dplyr::case_when(
-    is.na(HOM) & mac_non == 0 & expected_affected == 0 & mac_obligate + mac_potential >= 1 ~ 'carriers',
-    is.na(HOM) & mac_non == 0 & mac_affected == 1 & expected_affected + expected_obligate + expected_potential == 1 ~ 'singleton',
-    is.na(HOM) & mac_non == 0 & mac_affected == 1 & mac_obligate == 0 & mac_potential == 0 & mac_non == 0 ~ 'denovo',
-    is.na(HOM) & mac_non == 0 & mac_affected >= expected_affected & mac_obligate >= expected_obligate ~ 'complete',
-    is.na(HOM) & mac_non == 0 & mac_affected >= expected_affected & mac_obligate < expected_obligate ~ 'partial',
+    mac_non == 0 & expected_affected == 0 & (mac_obligate + mac_potential >= 1) ~ 'carriers',
+    mac_non == 0 & mac_affected == 1 & (expected_affected + expected_obligate + expected_potential == 1) ~ 'singleton',
+    mac_non == 0 & mac_affected == 1 & mac_obligate == 0 & mac_potential == 0 & mac_non == 0 ~ 'denovo',
+    mac_non == 0 & mac_affected >= expected_affected & mac_obligate == expected_obligate ~ 'complete',
+    mac_non == 0 & mac_affected < expected_affected & mac_obligate < expected_obligate ~ 'partial',
     TRUE ~ 'other'
   )) 
 

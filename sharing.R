@@ -37,6 +37,8 @@ carr <- dplyr::select(carr, carr)
 carr <- dplyr::left_join(carr, clusters, by = c('carr' = 'V1'))
 carr <- dplyr::group_by(carr, cluster = V2)
 carr <- dplyr::reframe(carr, expected = dplyr::n())
+carr <- tidyr::pivot_wider(carr, names_from = 'cluster', values_from = 'expected', names_prefix = 'expected_')
+carr <- dplyr::mutate(carr, famid = famid)
 
 # rlist
 rlist <- readr::read_delim(rlist, delim = ' ', col_names = c('variant', 'genotype', 'alt', 'ref'))
@@ -59,17 +61,17 @@ frq <- dplyr::left_join(rlist, id_carr, by = c('samples'='id'))
 frq <- dplyr::left_join(frq, clusters, by = c('carr'='V1'))
 frq <- dplyr::group_by(frq, variant, cluster = V2)
 frq <- dplyr::reframe(frq, mac = length(unique(samples)))
+frq <- tidyr::pivot_wider(frq, names_from = 'cluster', values_from = 'mac', names_prefix = 'mac_', values_fill = 0)
 
 # add info
 info <- tibble::tibble(famid = famid, category = category, variant = unique(frq$variant))
 
 # merge
-res <- dplyr::full_join(info, frq)
-res <- dplyr::left_join(res, carr)
-res <- dplyr::left_join(res, genotypes)
-res <- dplyr::inner_join(res, anno)
+res <- dplyr::inner_join(info, anno)
 res <- dplyr::filter(res, !variant %in% blacklist)
-res <- tidyr::pivot_wider(res, values_from = c('mac', 'expected'), names_from = 'cluster', values_fn = unique)
+res <- dplyr::left_join(res, genotypes)
+res <- dplyr::left_join(res, carr)
+res <- dplyr::left_join(res, frq)
 
 # order columns
 cols <- c(paste('expected', clusters$V2, sep = '_'),
@@ -80,11 +82,7 @@ names(m) <- cols
 
 res <- dplyr::left_join(res, m)
 res <- dplyr::relocate(res, setdiff(names(res), cols), sort(cols))
-
-# fill NA
-res <- dplyr::mutate_at(res, dplyr::vars(dplyr::starts_with('expected_')), ~ifelse(is.na(.x), 0, .x))
-res <- dplyr::mutate_at(res, dplyr::vars(dplyr::starts_with('mac_')), ~ifelse(is.na(.x), 0, .x))
-res <- dplyr::mutate_all(res, ~ifelse(is.na(.x), '', .x))
+res <- dplyr::mutate_all(res, ~ifelse(is.na(.x), 0, .x))
 
 # Write output
 output <- paste(famid, category, 'tsv', sep = '.')

@@ -5,13 +5,11 @@ args <- commandArgs(trailingOnly = TRUE)
 
 famid       <- args[1]
 category    <- args[2]
-snplist     <- args[3]
-rlist       <- args[4]
-frq         <- args[5]
-annotations <- args[6]
-cases       <- args[7]
-ped_file    <- args[8]
-blacklist   <- args[9]
+rlist       <- args[3]
+annotations <- args[4]
+cases       <- args[5]
+ped_file    <- args[6]
+blacklist   <- args[7]
 
 # blacklisted variants
 blacklist <- readr::read_lines(blacklist)
@@ -22,6 +20,7 @@ anno <- dplyr::select(anno, variant, gene = SYMBOL, ensembl = Gene, IMPACT, Cons
 
 # cases
 cases <- readr::read_lines(cases)
+cases <- stringr::str_split(cases, '_', simplify = TRUE)[, 2]
 
 # pedigree
 clusters <- tibble::tibble(
@@ -30,7 +29,8 @@ clusters <- tibble::tibble(
 )
 
 # expected numbers in each cluster
-id_carr <- readr::read_tsv(ped_file, col_select = c(2, 7), col_types = 'cc')
+id_carr <- readr::read_delim(ped_file, col_select = c(2, 7), col_types = 'cc', col_names = FALSE)
+id_carr <- setNames(id_carr, c('id', 'carr'))
 
 carr <- dplyr::filter(id_carr, id %in% cases)
 carr <- dplyr::select(carr, carr)

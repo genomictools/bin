@@ -32,7 +32,7 @@ plot(
 	pedigree,
     aff = affected,
     carrier = carrier,
-	marker = markers,
+	  marker = markers,
     margins = c(0.6, 1, length(markers) + 4, 1),
     title = title
 )

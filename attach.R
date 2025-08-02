@@ -20,7 +20,7 @@ rlist <- dplyr::mutate(rlist, samples = purrr::map_chr(stringr::str_split(sample
 rlist <- dplyr::select(rlist, variant, genotype, samples)
 rlist <- transform(rlist, samples = strsplit(samples, ','))
 rlist <- tidyr::unnest(rlist, samples)
-rlist <- dplyr::mutate(rlist, genotype = ifelse(genotype == 'HET', 'a/b', 'b/b'))
+rlist <- dplyr::mutate(rlist, genotype = ifelse(genotype == 'HET', 'a/b', 'a/a'))
 rlist <- unique(rlist)
 
 # Load pedigree
@@ -37,8 +37,9 @@ mms <- purrr::imap(rlist, ~{
     )
     
     with(d, {
-      s <- genotype
-      names(s) <- samples
+      s <- rep('a/a', length(cases))
+      names(s) <- cases
+      s[samples] <- genotype
       
       pedtools::marker(
         pdg,
@@ -55,8 +56,14 @@ pdg2 <- pedtools::setMarkers(pdg, mms)
 out_file <- paste(famid, category, 'marked', sep = '.')
 pedtools::writePed(pdg2, out_file)
 
-aff  <- readr::read_delim(ped_file, col_select = 6, col_names = FALSE)
-readr::write_lines(dplyr::pull(aff), paste(famid, 'aff', 'txt', sep = '.'))
+aff  <- readr::read_delim(ped_file, col_select = c(2,6), col_names = FALSE)
+aff <- dplyr::filter(aff, X6 == 2)
+aff <- dplyr::pull(aff, X2)
+readr::write_lines(aff, paste(famid, 'aff', 'txt', sep = '.'))
 
-carr <- readr::read_delim(ped_file, col_select = 7, col_names = FALSE)
-readr::write_lines(dplyr::pull(carr), paste(famid, 'carr', 'txt', sep = '.'))
+carr <- readr::read_delim(ped_file, col_select = c(2,7), col_names = FALSE)
+carr <- dplyr::filter(carr, X7 == 3)
+carr <- dplyr::pull(carr, X2)
+readr::write_lines(carr, paste(famid, 'carr', 'txt', sep = '.'))
+
+readr::write_lines(cases, paste(famid, 'star', 'txt', sep = '.'))

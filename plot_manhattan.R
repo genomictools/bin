@@ -4,8 +4,9 @@
 args <- commandArgs(trailingOnly = TRUE)
 
 cohort     <- args[1]
-test       <- args[2]
-test_file  <- args[3]
+category   <- args[2]
+test       <- args[3]
+test_file  <- args[4]
 
 # cohort     <- 'pheno'
 # test       <- 'assoc'
@@ -18,7 +19,7 @@ y <- -log10(d$P)
 c <- ifelse(d$CHR%%2 == 1, 'black', 'darkgray')
 
 # Create and save plot
-png(paste(cohort, test, 'png', sep = '.'),
+png(paste(cohort, category, test, 'png', sep = '.'),
     height = 5, width = 5, units = 'in', res = 300)
 
 plot(x, y,

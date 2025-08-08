@@ -6,20 +6,23 @@ args <- commandArgs(trailingOnly = TRUE)
 cohort     <- args[1]
 category   <- args[2]
 test       <- args[3]
-test_file  <- args[4]
+phenotype  <- args[4]
+test_file  <- args[5]
 
 # cohort     <- 'pheno'
 # test       <- 'assoc'
-# test_file  <- 'identify-associated-loci/test/results/tests/pheno.assoc'
+# test_file  <- 'identify-associated-loci/tests/results/tests/pheno.Unfiltered.P1.assoc'
 
 # Load data
-d <- readr::read_tsv(test_file)
+d <- readr::read_table(test_file)
+d <- dplyr::select(d, !dplyr::starts_with('X'))
+
 x <- 1:nrow(d)
 y <- -log10(d$P)
 c <- ifelse(d$CHR%%2 == 1, 'black', 'darkgray')
 
 # Create and save plot
-png(paste(cohort, category, test, 'png', sep = '.'),
+png(paste(cohort, category, test, phenotype, 'png', sep = '.'),
     height = 5, width = 5, units = 'in', res = 300)
 
 plot(x, y,

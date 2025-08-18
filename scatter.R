@@ -38,34 +38,41 @@ signal <- unlist(signal)
 # load dbs
 txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene::TxDb.Hsapiens.UCSC.hg38.knownGene
 org <- org.Hs.eg.db::org.Hs.eg.db
-keys <- AnnotationDbi::keys(org, 'SYMBOL')
+
+txdb_keys <- AnnotationDbi::keys(txdb, 'GENEID')
+org_keys <- AnnotationDbi::keys(org, 'ENTREZID')
+
+keys <- intersect(txdb_keys, org_keys)
+keys <- AnnotationDbi::select(org, keys, 'SYMBOL', 'ENTREZID')$SYMBOL
 
 purrr::imap(
   cnv,
   ~{
     # get gene model
     gene <- unlist(strsplit(.x$gene, ','))
-    gene <- head(intersect(gene, keys), 2)
-    gene_models <- cnvr::get_genemodel(txdb, org, gene)
-    
-    # get overlap
-    sub_signal <- signal[signal$sample == .x$sample]
-    ol <- cnvr::get_overlap(
-      .x,
-      sub_signal,
-      flank = GenomicRanges::width(.x)/2
-    )
-    
-    # make plot
-    cohort <- unlist(strsplit(.x$sample, '\\.'))[1]
-    sample <- unlist(strsplit(.x$sample, '\\.'))[2]
-    file_name <- paste(cohort, sample, .x$region, type, 'png', sep = '.')
-    png(filename = file_name, width = 4, height = 4, units = 'in', res = 300)
-    cnvr::plot_signal(
-      ol,
-      type = toupper(type), ylab = toupper(type),
-      gene_model = gene_models
-    )
-    dev.off()
+    if ( length(gene) ) {
+      gene <- intersect(gene, keys)
+      gene_models <- cnvr::get_genemodel(txdb, org, gene)
+
+      # get overlap
+      sub_signal <- signal[signal$sample == .x$sample]
+      ol <- cnvr::get_overlap(
+        .x,
+        sub_signal,
+        flank = GenomicRanges::width(.x)/2
+      )
+
+      # make plot
+      cohort <- unlist(strsplit(.x$sample, '\\.'))[1]
+      sample <- unlist(strsplit(.x$sample, '\\.'))[2]
+      file_name <- paste(cohort, sample, .x$region, type, 'png', sep = '.')
+      png(filename = file_name, width = 4, height = 4, units = 'in', res = 300)
+      cnvr::plot_signal(
+        ol,
+        type = toupper(type), ylab = toupper(type),
+        gene_model = gene_models
+      )
+      dev.off()
+    }
   }
 )

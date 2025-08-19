@@ -11,7 +11,7 @@ flank   <- args[5]
 top_n   <- args[6]
 
 # load cnv
-col_names <- c('region', 'numsnp', 'length', 'cn', 'sample', 'startsnp', 'endsnp', 'conf', 'gene', 'exon')
+col_names <- c('region', 'numsnp', 'length', 'cn', 'sample', 'startsnp', 'endsnp', 'conf', 'gene', 'distance')
 cnv <- cnvr::read_cnv(cnv, col_names)
 cnv <- cnv[cnv$gene != 'NOT_FOUND']
 cnv <- split(cnv, cnv$sample)
@@ -46,8 +46,8 @@ purrr::imap(
       ~{
         # get gene model
         gene <- unlist(strsplit(.x$gene, ','))
-        if ( length(gene) ) {
-          gene <- intersect(gene, keys)
+        gene <- intersect(gene, keys)
+        if ( length(gene) > 0 ) {
           gene_models <- cnvr::get_genemodel(txdb, org, gene)
 
           # get overlap

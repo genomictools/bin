@@ -66,10 +66,14 @@ purrr::imap(
         # LRR
         file_name <- paste(cohort, gene, sample, .x$region, 'lrr', 'png', sep = '.')
         png(filename = file_name, width = 5, height = 5, units = 'in', res = 300)
+        ylim <- c(c(min(min(ol$lrr), -1)), c(max(max(ol$lrr), 1)))
+        ylim <- ifelse(ylim > 2, 2, ylim)
+        ylim <- ifelse(ylim < -2, -2, ylim)
+
         cnvr::plot_signal(
           ol,
           type = 'LRR', ylab = 'LRR',
-          ylim = c(c(min(min(ol$lrr), -1)), c(max(max(ol$lrr), 1))),
+          ylim = ylim,
           plot_gene = plot_gene,
           gene_model = gene_models
         )

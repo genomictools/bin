@@ -15,14 +15,11 @@ n_genes   <- args[7]
 col_names <- c('region', 'numsnp', 'length', 'cn', 'sample', 'startsnp', 'endsnp', 'conf', 'gene', 'distance')
 cnv <- cnvr::read_cnv(cnv, col_names)
 
+genelist <- unlist(strsplit(genelist, ','))
+
 if (length(genelist) > 1) {
-  ind <- purrr::map2_lgl(
-    strsplit(cnv$gene, ','),
-    strsplit(genelist, ','),
-    ~{sum(.x %in% .y) > 0}
-  )
-  
-  cnv <- cnv[ind]
+  cnv$gene <- purrr::map_chr(strsplit(cnv$gene, ','), ~paste(intersect(.x, genelist), collapse = ','))
+  cnv <- cnv[cnv$gene != '']
 }
 
 file_name <- paste(cohort, feature, type, 'heatmap', 'png', sep = '.')

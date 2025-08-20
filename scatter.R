@@ -65,10 +65,11 @@ purrr::imap(
 
         # LRR
         file_name <- paste(cohort, gene, sample, .x$region, 'lrr', 'png', sep = '.')
-        png(filename = file_name, width = 4, height = 4, units = 'in', res = 300)
+        png(filename = file_name, width = 5, height = 5, units = 'in', res = 300)
         cnvr::plot_signal(
           ol,
           type = 'LRR', ylab = 'LRR',
+          ylim = c(c(min(min(ol$lrr), -1)), c(max(max(ol$lrr), 1))),
           plot_gene = plot_gene,
           gene_model = gene_models
         )
@@ -76,7 +77,7 @@ purrr::imap(
         
         # BAF
         file_name <- paste(cohort, gene, sample, .x$region, 'baf', 'png', sep = '.')
-        png(filename = file_name, width = 4, height = 4, units = 'in', res = 300)
+        png(filename = file_name, width = 5, height = 5, units = 'in', res = 300)
         cnvr::plot_signal(
           ol,
           type = 'BAF', ylab = 'BAF',

@@ -3,17 +3,16 @@
 # Capture command-line arguments
 args <- commandArgs(trailingOnly = TRUE)
 
-cnv     <- args[1]
-signal  <- args[2]
-pfb     <- args[3]
-type    <- args[4]
-flank   <- args[5]
-top_n   <- args[6]
+cohort  <- args[1]
+gene    <- args[2]
+cnv     <- args[3]
+signal  <- args[4]
+pfb     <- args[5]
+flank   <- args[6]
 
 # load cnv
-col_names <- c('region', 'numsnp', 'length', 'cn', 'sample', 'startsnp', 'endsnp', 'conf', 'gene', 'distance')
+col_names <- c('region', 'numsnp', 'length', 'cn', 'sample', 'startsnp', 'endsnp', 'conf')
 cnv <- cnvr::read_cnv(cnv, col_names)
-cnv <- cnv[cnv$gene != 'NOT_FOUND']
 cnv <- split(cnv, cnv$sample)
 
 # load pfb
@@ -28,6 +27,15 @@ org_keys <- AnnotationDbi::keys(org, 'ENTREZID')
 
 keys <- intersect(txdb_keys, org_keys)
 keys <- AnnotationDbi::select(org, keys, 'SYMBOL', 'ENTREZID')$SYMBOL
+
+# get gene model
+if (length(intersect(gene, keys)) > 0) {
+  gene_models <- cnvr::get_genemodel(txdb, org, gene)
+  plot_gene <- TRUE
+} else {
+  gene_models <- NULL
+  plot_gene <- FALSE
+}
 
 purrr::imap(
   cnv,
@@ -44,31 +52,26 @@ purrr::imap(
     purrr::imap(
       gr,
       ~{
-        # get gene model
-        gene <- unlist(strsplit(.x$gene, ','))
-        gene <- intersect(gene, keys)
-        if ( length(gene) > 0 ) {
-          gene_models <- cnvr::get_genemodel(txdb, org, gene)
+        # get overlap
+        ol <- cnvr::get_overlap(
+          .x,
+          signal,
+          flank = GenomicRanges::width(.x)/2
+        )
 
-          # get overlap
-          ol <- cnvr::get_overlap(
-            .x,
-            signal,
-            flank = GenomicRanges::width(.x)/2
-          )
+        # make plot
+        cohort <- unlist(strsplit(.x$sample, '\\.'))[1]
+        sample <- unlist(strsplit(.x$sample, '\\.'))[2]
 
-          # make plot
-          cohort <- unlist(strsplit(.x$sample, '\\.'))[1]
-          sample <- unlist(strsplit(.x$sample, '\\.'))[2]
-          file_name <- paste(cohort, sample, .x$region, type, 'png', sep = '.')
-          png(filename = file_name, width = 5, height = 4 + length(gene) / 2, units = 'in', res = 300)
-          cnvr::plot_signal(
-            ol,
-            type = toupper(type), ylab = toupper(type),
-            gene_model = gene_models
-          )
-          dev.off()
-        }
+        file_name <- paste(cohort, gene, sample, .x$region, 'lrr', 'png', sep = '.')
+        png(filename = file_name, width = 5, height = 4 + length(gene) / 2, units = 'in', res = 300)
+        cnvr::plot_signal(
+          ol,
+          type = 'LRR', ylab = 'LRR',
+          plot_gene = plot_gene,
+          gene_model = gene_models
+        )
+        dev.off()
       }
     )
   }

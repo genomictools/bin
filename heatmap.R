@@ -14,7 +14,7 @@ n_genes   <- args[6]
 col_names <- c('region', 'numsnp', 'length', 'cn', 'sample', 'startsnp', 'endsnp', 'conf', 'gene', 'distance')
 cnv <- cnvr::read_cnv(cnv, col_names)
 
-file_name <- paste(cohort, feature, type, 'png', sep = '.')
+file_name <- paste(cohort, feature, type, 'heatmap', 'png', sep = '.')
 
 png(filename = file_name)
 

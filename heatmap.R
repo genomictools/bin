@@ -4,12 +4,13 @@
 args <- commandArgs(trailingOnly = TRUE)
 
 cohort    <- args[1]
-feature   <- args[2]
-cnv       <- args[3]
-type      <- args[4]
-genelist  <- args[5]
-n_samples <- args[6]
-n_genes   <- args[7]
+tool      <- args[2]
+feature   <- args[3]
+cnv       <- args[4]
+type      <- args[5]
+genelist  <- args[6]
+n_samples <- args[7]
+n_genes   <- args[8]
 
 # load cnv
 col_names <- c('region', 'numsnp', 'length', 'cn', 'sample', 'startsnp', 'endsnp', 'conf', 'gene', 'distance')
@@ -22,7 +23,7 @@ if (length(genelist) > 1) {
   cnv <- cnv[cnv$gene != '']
 }
 
-file_name <- paste(cohort, feature, type, 'heatmap', 'png', sep = '.')
+file_name <- paste(cohort, tool, feature, type, 'heatmap', 'png', sep = '.')
 
 png(filename = file_name)
 

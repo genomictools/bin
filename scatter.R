@@ -41,11 +41,20 @@ purrr::imap(
   cnv,
   ~{
     # load signal
-    signal <- cnvr::read_signal(
-      unique(.x$sample),
-      col_names = c('name', 'baf', 'lrr'),
-      pfb = pfb
-    )
+    fl <- unique(.x$sample)
+    if (stringr::str_detect(fl, 'merged')) {
+      signal <- cnvr::read_signal(
+        fl,
+        col_names = c('name', 'chr', 'pos', 'baf', 'lrr')
+      )
+    } else {
+      signal <- cnvr::read_signal(
+        fl,
+        col_names = c('name', 'baf', 'lrr'),
+        pfb = pfb
+      )
+    }
+
 
     # split by region
     gr <- split(.x, .x$region)
@@ -78,7 +87,7 @@ purrr::imap(
           gene_model = gene_models
         )
         dev.off()
-        
+
         # BAF
         file_name <- paste(cohort, gene, sample, .x$region, 'baf', 'png', sep = '.')
         png(filename = file_name, width = 5, height = 5, units = 'in', res = 300)

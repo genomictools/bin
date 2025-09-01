@@ -38,10 +38,11 @@ cnv.call <- BackwardElimination(
   MinSegLen = opt$min_seg_length
 )
 
-cnvs <- summary(
-  cnv.call,
-  length.base = c(500,10e6)
-)
+cnvs <- summary( cnv.call )
+# cnvs <- summary(
+#   cnv.call,
+#   length.base = c(500,10e6)
+# )
 
 cnvs <- as_tibble(cnvs)
 cnvs <- filter(cnvs, State != 0)
@@ -49,7 +50,9 @@ cnvs <- mutate(
   cnvs,
   sample = opt$input, sample_index = sample,
   copy_number = ifelse(State == 1, 3, 1),
-  size = EndProbe - IniProbe
+  size = EndProbe - IniProbe,
+  per_probe_score = abs(MeanAmp),
+  lod_score = per_probe_score
 )
 
 d <- dplyr::select(
@@ -60,10 +63,10 @@ d <- dplyr::select(
   chr = chromosome,
   start = IniProbe,
   end = EndProbe,
-  per_probe_score = MeanAmp,
+  per_probe_score,
   size,
   num_probes = LenProbe,
-  lod_score = MeanAmp
+  lod_score
 )
 
 write.table(

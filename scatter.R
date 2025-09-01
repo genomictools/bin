@@ -5,10 +5,11 @@ args <- commandArgs(trailingOnly = TRUE)
 
 cohort  <- args[1]
 gene    <- args[2]
-cnv     <- args[3]
-signal  <- args[4]
-pfb     <- args[5]
-flank   <- args[6]
+tool    <- args[3]
+cnv     <- args[4]
+signal  <- args[5]
+pfb     <- args[6]
+flank   <- args[7]
 
 # load cnv
 col_names <- c('region', 'numsnp', 'length', 'cn', 'sample', 'startsnp', 'endsnp', 'conf')
@@ -73,7 +74,7 @@ purrr::imap(
         sample <- unlist(strsplit(.x$sample, '\\.'))[2]
 
         # LRR
-        file_name <- paste(cohort, gene, sample, .x$region, 'lrr', 'png', sep = '.')
+        file_name <- paste(cohort, gene, tool, sample, .x$region, 'lrr', 'png', sep = '.')
         png(filename = file_name, width = 5, height = 5, units = 'in', res = 300)
         ylim <- c(c(min(min(ol$lrr), -1)), c(max(max(ol$lrr), 1)))
         ylim <- ifelse(ylim > 2, 2, ylim)
@@ -89,7 +90,7 @@ purrr::imap(
         dev.off()
 
         # BAF
-        file_name <- paste(cohort, gene, sample, .x$region, 'baf', 'png', sep = '.')
+        file_name <- paste(cohort, gene, tool, sample, .x$region, 'baf', 'png', sep = '.')
         png(filename = file_name, width = 5, height = 5, units = 'in', res = 300)
         cnvr::plot_signal(
           ol,

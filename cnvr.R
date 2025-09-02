@@ -43,8 +43,7 @@ grl <- GenomicRanges::sort(grl)
 cnvr <- CNVRanger::populationRanges(
     grl,
     mode = 'RO',
-    ro.thresh = as.integer(overlap),
-    est.recu = TRUE
+    ro.thresh = as.integer(overlap)
 )
 
 # assign sample and tool info to recurrent segments

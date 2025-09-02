@@ -1,62 +1,56 @@
 #!/usr/bin/env Rscript
 
-library(gada)
-library(dplyr)
-library(optparse)
+# Capture command-line arguments
+args <- commandArgs(trailingOnly = TRUE)
 
-option_list = list(
-  make_option(c("-i", "--input"), action = "store", type = "character", default = NA,
-              help = "Input .baflrr file"),
-  make_option(c("-o", "--output"), action = "store", type = "character", default = "results",
-              help = "Name of the output file with cnv calls"),
-  make_option(c("-t", "--t_statistic"), action = "store", type = "numeric", default = 4,
-              help = "Threshold for the t-statistic"),
-  make_option(c("-a", "--a_alpha"), action = "store", type = "numeric", default = 0.8,
-              help = "A alpha"),
-  make_option(c("-m", "--min_seg_length"), action = "store", type = "numeric", default = 100,
-              help = "Minimum segment length")
-)
+input           <- args[1]
+a_alpha         <- args[2]
+t_statistic     <- args[3]
+min_seg_length  <- args[4]
+output          <- args[5]
 
-opt = parse_args(OptionParser(option_list = option_list))
-
-cnv.call <- setupGADA(
-  opt$input,
+# Setup
+cnv.call <- gada::setupGADA(
+  input,
   log2ratioCol = 4,
   BAFcol = 5
 ) 
 
-cnv.call <- SBL(
+# SBL
+cnv.call <- gada::SBL(
   cnv.call,
   estim.sigma2 = TRUE,
-  aAlpha = opt$a_alpha,
+  aAlpha = a_alpha,
   verbose = TRUE
 )
 
-cnv.call <- BackwardElimination(
+# BE
+cnv.call <- gada::BackwardElimination(
   cnv.call,
-  T = opt$t_statistic,
-  MinSegLen = opt$min_seg_length
+  T = t_statistic,
+  MinSegLen = min_seg_length
 )
 
-cnvs <- summary( cnv.call )
+# Summary
+res <- summary( cnv.call )
 # cnvs <- summary(
 #   cnv.call,
 #   length.base = c(500,10e6)
 # )
 
-cnvs <- as_tibble(cnvs)
-cnvs <- filter(cnvs, State != 0)
-cnvs <- mutate(
-  cnvs,
-  sample = opt$input, sample_index = sample,
-  copy_number = ifelse(State == 1, 3, 1),
+# Tidy
+res <- dplyr::mutate(
+  tibble::as_tibble(res),
+  sample = input,
+  sample_index = sample,
+  copy_number = State + 2,
   size = EndProbe - IniProbe,
   per_probe_score = abs(MeanAmp),
   lod_score = per_probe_score
 )
 
-d <- dplyr::select(
-  cnvs,
+res <- dplyr::select(
+  res,
   sample,
   sample_index,
   copy_number,
@@ -69,9 +63,18 @@ d <- dplyr::select(
   lod_score
 )
 
+# Write to files
 write.table(
-  d,
-  file = opt$output,
+  dplyr::filter(res, copy_number == 2),
+  file = paste(output, 'loh', sep = '.'),
+  sep = "\t",
+  quote = FALSE,
+  row.names = FALSE
+)
+
+write.table(
+  dplyr::filter(res, copy_number != 2),
+  file = paste(output, 'cnv', sep = '.'),
   sep = "\t",
   quote = FALSE,
   row.names = FALSE

@@ -46,6 +46,6 @@ atsnp.scores <- atSNP::ComputeMotifScore(motifs, snp_info, ncores = 1)
 # Format scores
 atsnp.scores <- dplyr::left_join(atsnp.scores$snp.tbl, atsnp.scores$motif.scores)
 atsnp.scores <- tidyr::separate(atsnp.scores, snpid, into = c('CHROM','POS','REF','ALT'), sep = ':', remove = FALSE)
-atsnp.scores <- dplyr::select(atsnp.scores, CHROM, POS, REF, ALT, ID = snpid, everything())
+atsnp.scores <- dplyr::select(atsnp.scores, CHROM, POS, ID = snpid, REF, ALT, everything())
 
 readr::write_tsv(atsnp.scores, output)

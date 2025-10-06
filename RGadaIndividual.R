@@ -1,0 +1,81 @@
+#!/usr/bin/env Rscript
+
+# Capture command-line arguments
+args <- commandArgs(trailingOnly = TRUE)
+
+input           <- args[1]
+a_alpha         <- args[2]
+t_statistic     <- args[3]
+min_seg_length  <- args[4]
+output          <- args[5]
+
+# Setup
+cnv.call <- gada::setupGADA(
+  input,
+  log2ratioCol = 4,
+  BAFcol = 5
+) 
+
+# SBL
+cnv.call <- gada::SBL(
+  cnv.call,
+  estim.sigma2 = TRUE,
+  aAlpha = a_alpha,
+  verbose = TRUE
+)
+
+# BE
+cnv.call <- gada::BackwardElimination(
+  cnv.call,
+  T = t_statistic,
+  MinSegLen = min_seg_length
+)
+
+# Summary
+res <- summary( cnv.call )
+# cnvs <- summary(
+#   cnv.call,
+#   length.base = c(500,10e6)
+# )
+
+# Tidy
+res <- dplyr::mutate(
+  tibble::as_tibble(res),
+  sample = input,
+  sample_index = sample,
+  copy_number = State + 2,
+  size = EndProbe - IniProbe,
+  per_probe_score = abs(MeanAmp),
+  lod_score = per_probe_score
+)
+
+res <- dplyr::select(
+  res,
+  sample,
+  sample_index,
+  copy_number,
+  chr = chromosome,
+  start = IniProbe,
+  end = EndProbe,
+  per_probe_score,
+  size,
+  num_probes = LenProbe,
+  lod_score
+)
+
+# Write to files
+write.table(
+  dplyr::filter(res, copy_number == 2),
+  file = paste(output, 'loh', sep = '.'),
+  sep = "\t",
+  quote = FALSE,
+  row.names = FALSE
+)
+
+write.table(
+  dplyr::filter(res, copy_number != 2),
+  file = paste(output, 'cnv', sep = '.'),
+  sep = "\t",
+  quote = FALSE,
+  row.names = FALSE
+)

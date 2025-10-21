@@ -8,7 +8,8 @@ cohort  <- args[2]
 mode    <- args[3]
 scaled  <- args[4]
 pop     <- args[5]
-dims    <- args[6]
+family_ids <- args[6]
+dims    <- args[7]
 
 # ref     <- '1kg'
 # cohort  <- 'fact'
@@ -20,7 +21,7 @@ dims    <- args[6]
 # Load population data
 populations <- read.table(pop, header = FALSE)
 names(populations) <- c('FID', 'IID', 'pop', 'superpop', 'type')
-populations <- dplyr::mutate(populations, FID = as.character(FID))
+populations <- dplyr::mutate(populations, FID = ifelse(family_ids == 'true', as.character(FID), '0'))
 
 # Load scaled data
 if ( mode == 'mds' ) {
@@ -56,6 +57,6 @@ assigned_pop <- dplyr::left_join(populations, res)
 
 readr::write_tsv(
   assigned_pop, 
-  paste(ref, cohort, mode, 'pop', sep = '.'),
+  paste(ref, cohort, mode, 'assigned', 'pop', sep = '.'),
   col_names = FALSE
 )

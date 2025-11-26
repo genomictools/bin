@@ -65,10 +65,12 @@ BEGIN {
                 }
             }
             
-            # Output one line for each SNP name that matches this rsid
-            split(snp_names[pfb_rsid], names, ",");
-            for (j in names) {
-                print names[j], $2, $3, pfb_value;
+            # Only output if pfb_value is not empty and not 0
+            if (pfb_value != "" && pfb_value != "0" && pfb_value != 0) {
+                # Output one line for each SNP name that matches this rsid
+                split(snp_names[pfb_rsid], names, ",");
+                for (j in names) {
+                    print names[j], gsub(/^chr/, "", $2) ? $2 : $2, $3, pfb_value;                }
             }
         }
     }

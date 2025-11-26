@@ -9,18 +9,24 @@ t_statistic     <- args[3]
 min_seg_length  <- args[4]
 output          <- args[5]
 
+# Get chrom names, and exclude if has a few markers
+chrs <- read.delim(input)
+chrs <- chrs$Chromosome
+chrs <- names(table(chrs)[table(chrs) > min_seg_length])
+
 # Setup
 cnv.call <- gada::setupGADA(
   input,
-  log2ratioCol = 4,
-  BAFcol = 5
+  log2ratioCol = 5,
+  BAFcol = 4,
+  chrs = chrs
 ) 
 
 # SBL
 cnv.call <- gada::SBL(
   cnv.call,
   estim.sigma2 = TRUE,
-  aAlpha = a_alpha,
+  aAlpha = as.numeric(a_alpha),
   verbose = TRUE
 )
 

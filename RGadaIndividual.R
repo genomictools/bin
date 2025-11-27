@@ -71,15 +71,7 @@ res <- dplyr::select(
 
 # Write to files
 write.table(
-  dplyr::filter(res, copy_number == 2),
-  file = paste(output, 'loh', sep = '.'),
-  sep = "\t",
-  quote = FALSE,
-  row.names = FALSE
-)
-
-write.table(
-  dplyr::filter(res, copy_number != 2),
+  res,
   file = paste(output, 'cnv', sep = '.'),
   sep = "\t",
   quote = FALSE,

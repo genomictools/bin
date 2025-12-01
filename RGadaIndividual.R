@@ -12,7 +12,7 @@ output          <- args[5]
 # Get chrom names, and exclude if has a few markers
 chrs <- read.delim(input)
 chrs <- chrs$Chromosome
-chrs <- names(table(chrs)[table(chrs) > min_seg_length])
+chrs <- names(table(chrs)[table(chrs) > as.integer(min_seg_length)])
 
 # Setup
 cnv.call <- gada::setupGADA(

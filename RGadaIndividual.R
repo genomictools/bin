@@ -17,8 +17,8 @@ chrs <- names(table(chrs)[table(chrs) > as.integer(min_seg_length)])
 # Setup
 cnv.call <- gada::setupGADA(
   input,
-  log2ratioCol = 5,
-  BAFcol = 4,
+  log2ratioCol = 4,
+  BAFcol = 5,
   chrs = chrs
 ) 
 

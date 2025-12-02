@@ -15,5 +15,6 @@ pfb <- readr::read_tsv(pfb)
 pfb <- dplyr::select(pfb, `SNP Name` = SNP, Chromosome = Chr, Position)
 
 res <- dplyr::inner_join(pfb, file)
+res <- na.omit(res)
 
 readr::write_tsv(res, output)

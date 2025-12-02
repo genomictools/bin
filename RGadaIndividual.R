@@ -2,12 +2,12 @@
 
 # Capture command-line arguments
 args <- commandArgs(trailingOnly = TRUE)
-
-input           <- args[1]
-a_alpha         <- args[2]
-t_statistic     <- args[3]
-min_seg_length  <- args[4]
-output          <- args[5]
+key             <- args[1]
+input           <- args[2]
+a_alpha         <- args[3]
+t_statistic     <- args[4]
+min_seg_length  <- args[5]
+output          <- args[6]
 
 # Get chrom names, and exclude if has a few markers
 chrs <- read.delim(input)
@@ -47,7 +47,7 @@ res <- summary( cnv.call )
 # Tidy
 res <- dplyr::mutate(
   tibble::as_tibble(res),
-  sample = input,
+  sample = key,
   sample_index = sample,
   copy_number = State + 2,
   size = EndProbe - IniProbe,
@@ -72,8 +72,9 @@ res <- dplyr::select(
 # Write to files
 write.table(
   res,
-  file = paste(output, 'cnv', sep = '.'),
+  file = output,
   sep = "\t",
   quote = FALSE,
-  row.names = FALSE
+  row.names = FALSE,
+  col.names = FALSE
 )

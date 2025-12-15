@@ -13,20 +13,35 @@ output      <- args[6]
 # load pfb
 pfb <- cnvr::read_pfb(pfb, c('name', 'chr', 'pos', 'pfb'))
 
+# load region
+region <- unlist(strsplit(region, '\\_'))
+region <- GenomicRanges::GRanges(
+  seqnames = region[1],
+  ranges = IRanges::IRanges(
+    start = as.numeric(region[2]),
+    end = as.numeric(region[3])
+  )
+)
+
 # load dbs
 txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene::TxDb.Hsapiens.UCSC.hg38.knownGene
 org <- org.Hs.eg.db::org.Hs.eg.db
 
-# get gene model
+# get gene list
 if (feature == 'refgene') {
   gene <- unlist(strsplit(feature_list, ','))
-  if (length(gene) > 0) {
-    gene_models <- cnvr::get_genemodel(txdb, org, gene)
-    plot_gene <- TRUE
-  } else {
-    gene_models <- NULL
-    plot_gene <- FALSE
-  }
+} else {
+  gene_id <- unique(IRanges::subsetByOverlaps(GenomicFeatures::genes(txdb), region)$gene_id)
+  gene <- AnnotationDbi::select(org, gene_id, 'SYMBOL', 'ENTREZID')$SYMBOL  
+}
+
+# get gene model
+if (length(gene) > 0) {
+  gene_models <- cnvr::get_genemodel(txdb, org, gene)
+  plot_gene <- TRUE
+} else {
+  gene_models <- NULL
+  plot_gene <- FALSE
 }
 
 # load signal
@@ -37,15 +52,6 @@ signal <- cnvr::read_signal(
 )
 
 # get overlap
-region <- unlist(strsplit(region, '\\_'))
-region <- GenomicRanges::GRanges(
-  seqnames = region[1],
-  ranges = IRanges::IRanges(
-    start = as.numeric(region[2]),
-    end = as.numeric(region[3])
-  )
-)
-
 ol <- cnvr::get_overlap(
   region,
   signal,

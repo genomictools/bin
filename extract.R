@@ -5,10 +5,10 @@ args <- commandArgs(trailingOnly = TRUE)
 
 file     <- args[1]
 name_col <- args[2]
-baf_col  <- args[3]
-lrr_col  <- args[4]
-a1_col   <- args[5]
-a2_col   <- args[6]
+baf_col  <- unlist(strsplit(args[3], split = ","))
+lrr_col  <- unlist(strsplit(args[4], split = ","))
+a1_col   <- unlist(strsplit(args[5], split = ","))
+a2_col   <- unlist(strsplit(args[6], split = ","))
 output   <- args[7]
 
 # Get number of lines to skip

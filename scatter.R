@@ -8,7 +8,8 @@ feature     <- args[2]
 feature_list<- args[3]
 region      <- args[4]
 pfb         <- args[5]
-output      <- args[6]
+cytobands   <- args[6]
+output      <- args[7]
 
 # load pfb
 pfb <- cnvr::read_pfb(pfb, c('name', 'chr', 'pos', 'pfb'))
@@ -22,6 +23,8 @@ region <- GenomicRanges::GRanges(
     end = as.numeric(region[3])
   )
 )
+
+flank <- GenomicRanges::width(region)
 
 # load dbs
 txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene::TxDb.Hsapiens.UCSC.hg38.knownGene
@@ -38,10 +41,8 @@ if (feature == 'refgene') {
 # get gene model
 if (length(gene) > 0) {
   gene_models <- cnvr::get_genemodel(txdb, org, gene)
-  plot_gene <- TRUE
 } else {
   gene_models <- NULL
-  plot_gene <- FALSE
 }
 
 # load signal
@@ -51,36 +52,33 @@ signal <- cnvr::read_signal(
   pfb = pfb
 )
 
-# get overlap
-ol <- cnvr::get_overlap(
-  region,
-  signal,
-  flank = GenomicRanges::width(region)/2
-)
+# read cytobands
+col_names <- c('num', 'chrom', 'start', 'end', 'band', 'name', 'stain')
+cytobands <- cnvr::read_cytobands(cytobands, col_names = col_names)
 
 # LRR
 file_name <- paste(output, 'lrr', 'png', sep = '.')
-png(filename = file_name, width = 5, height = 5, units = 'in', res = 300)
-ylim <- c(c(min(min(ol$lrr), -1)), c(max(max(ol$lrr), 1)))
-ylim <- ifelse(ylim > 2, 2, ylim)
-ylim <- ifelse(ylim < -2, -2, ylim)
+height <- 4 + length(gene) / 1.5
+png(filename = file_name, width = 5, height = height, units = 'in', res = 300)
 
 cnvr::plot_signal(
-  ol,
+  signal, region,
+  flank = flank,
   type = 'LRR', ylab = 'LRR',
-  ylim = ylim,
-  plot_gene = plot_gene,
-  gene_model = gene_models
+  ylim = c(-1.5, 1.5),
+  gene_model = gene_models,
+  bands = cytobands
 )
+
 dev.off()
 
 # BAF
 file_name <- paste(output, 'baf', 'png', sep = '.')
 png(filename = file_name, width = 5, height = 5, units = 'in', res = 300)
 cnvr::plot_signal(
-  ol,
+  flank = flank,
+  signal, region,
   type = 'BAF', ylab = 'BAF',
-  plot_gene = plot_gene,
   gene_model = gene_models
 )
 dev.off()

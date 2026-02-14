@@ -36,7 +36,7 @@ plot(1:length(test_coverage),
      ylim = ylim,
      xlab = 'Relative Position (Exons)',
      ylab = 'Coverage',
-     main = paste0(key, ' (', gene, ')'))
+     main = paste0(gene, ' (', key, ')'))
 
 for (i in ref_coverage) {
   lines(1:length(test_coverage),

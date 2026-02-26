@@ -6,52 +6,40 @@ args <- commandArgs(trailingOnly = TRUE)
 cohort <- args[1]
 gene   <- args[2]
 key    <- args[3]
-counts <- args[4]
+test   <- args[4]
 ref    <- args[5]
 prob   <- args[6]
 
 # load tests
-counts <- readr::read_tsv(counts)
-counts <- GenomicRanges::makeGRangesFromDataFrame(counts, keep.extra.columns = TRUE)
+test <- rtracklayer::import.bed(test)
 
 # load ref
 ref <- unlist(strsplit(ref, ','))
-ref <- purrr::map_df(ref, readr::read_tsv)
-ref <- GenomicRanges::makeGRangesFromDataFrame(ref, keep.extra.columns = TRUE)
-
-# reshape
-ref <- tidyr::pivot_wider(
-  as.data.frame(GenomicRanges::mcols(ref)),
-  names_from = 'key',
-  values_from = 'counts'
-)
-
-ref_matrix <- as.matrix(dplyr::select(ref, -dplyr::starts_with('exon'), -dplyr::starts_with('GC')))
+ref <- purrr::map(ref, rtracklayer::import.bed)
+ref <- purrr::map(ref, ~.x$score)
+ref <- dplyr::bind_cols(ref)
+ref <- as.matrix(ref)
 
 # aggregate references
-ref_agg <- apply(X = ref_matrix, MAR = 1, FUN = sum)
-
-# covariants
-covar <- data.frame(GC = counts$GC)
+ref_agg <- apply(X = ref, MAR = 1, FUN = sum)
 
 # create ExomeDepth object
 library(ExomeDepth)
 all_exons <- new(
   'ExomeDepth',
-  data = covar,
-  test = counts$counts,
+  test = test$score,
   reference = ref_agg,
-  formula = 'cbind(test, reference) ~ GC'
+  formula = 'cbind(test, reference) ~ 1'
 )
 
 # call CNVs using HMM
 cnv <- ExomeDepth::CallCNVs(
   x = all_exons,
   transition.probability = as.numeric(prob),
-  chromosome = as.character(GenomicRanges::seqnames(counts)),
-  start = GenomicRanges::start(counts),
-  end = GenomicRanges::end(counts),
-  name = paste(gene, '-0_', 1:length(counts))
+  chromosome = as.character(GenomicRanges::seqnames(test)),
+  start = GenomicRanges::start(test),
+  end = GenomicRanges::end(test),
+  name = paste(gene, '-0_', 1:length(test))
 )
 
 # save cnv object

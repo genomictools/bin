@@ -49,9 +49,34 @@ readr::write_rds(
 )
 
 # write output to text file
-d <- tibble::as_tibble(cnv@CNV.calls)
-if ( nrow(d) > 0) {
-  d <- dplyr::mutate(d, cohort = cohort, gene = gene, key = key)
+d <- tibble::as_tibble(matrix(ncol = 13))
+colnames(d) <- c(
+  'seqnames','start','end',
+  'exon_start','exon_end','cn','cov','norm_cov','ratio','stats',
+  'cohort','key','gene'
+)
+if (nrow(cnv@CNV.calls) > 0) {
+  d <- with(
+    tibble::as_tibble(cnv@CNV.calls),
+    tibble::tibble(
+      seqnames = chromosome,
+      start,
+      end,
+      exon_start = start.p,
+      exon_end = end.p,
+      cn = type,
+      cov = reads.observed,
+      norm_cov = reads.expected,
+      ratio = reads.ratio,
+      stats = BF,
+      cohort = cohort,
+      key = key,
+      gene = gene
+    )
+  )
+  d <- dplyr::mutate(d, cn = ifelse(cn == 'deletion', 1, 3))
+} else {
+  d <- na.omit(d)
 }
 
 readr::write_tsv(

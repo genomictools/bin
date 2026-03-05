@@ -22,7 +22,7 @@ ref <- purrr::map(ref, ~.x$score)
 ref <- dplyr::bind_cols(ref)
 ref <- as.matrix(ref)
 
-counts <- cbind(test$score, ref)
+counts <- cbind(test$score, ref) + 1
 colnames(counts) <- c(test_key, unlist(strsplit(ref_key, ',')))
 rownames(counts) <- test$name
 
@@ -56,7 +56,27 @@ seg_cbs <- CODEX2::segmentCBS(
 )
 
 # write output to text file
-cnv <- as.data.frame(seg_cbs)
+cnv <- tibble::as_tibble(seg_cbs)
+cnv <- with(
+  cnv,
+  tibble::tibble(
+    seqnames = chr,
+    start = st_bp,
+    end = ed_bp,
+    exon_start = st_exon,
+    exon_end = ed_exon,
+    cn = copy_no,
+    cov = raw_cov,
+    norm_cov = norm_cov,
+    ratio = lratio,
+    stats = mBIC,
+    cohort = cohort,
+    key = test_key,
+    gene = gene
+  )
+)
+
+cnv <- na.omit(cnv)
 
 readr::write_tsv(
   cnv,
@@ -99,12 +119,11 @@ for (i in seq_len(nrow(cnv))) {
 with(cnv[i,],
  {
   rect(
-    st_exon, 0, ed_exon, max(counts),
+    exon_start, 0, exon_end, max(counts),
     border = FALSE,
-    col = adjustcolor(ifelse(cnv == 'dup', 'red', 'green'), alpha.f = .2)
+    col = adjustcolor(ifelse(cnv == 3, 'red', 'green'), alpha.f = .2)
     )
   })
 }
-cnv
 
 dev.off()

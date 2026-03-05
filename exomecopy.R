@@ -55,9 +55,24 @@ readr::write_rds(
 )
 
 # write output to text file
-d <- tibble::as_tibble(exomeCopy::copyCountSegments(cnv))
-d <- dplyr::mutate(d, cohort = cohort, gene = gene)
-d <- dplyr::rename(d, key = sample.name)
+d <- with(
+  tibble::as_tibble(exomeCopy::copyCountSegments(cnv)),
+  tibble::tibble(
+    seqnames,
+    start,
+    end,
+    exon_start = NA,
+    exon_end = NA,
+    cn = copy.count,
+    cov = NA,
+    norm_cov = NA,
+    ratio = NA,
+    stats = log.odds,
+    cohort = cohort,
+    key = test_key,
+    gene = gene
+  )
+)
 
 readr::write_tsv(
   d,

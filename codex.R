@@ -56,7 +56,55 @@ seg_cbs <- CODEX2::segmentCBS(
 )
 
 # write output to text file
+cnv <- as.data.frame(seg_cbs)
+
 readr::write_tsv(
-  as.data.frame(seg_cbs),
+  cnv,
   paste(cohort, gene, test_key, 'cnv', 'tsv', sep = '.')
 )
+
+# plot
+png(paste(cohort, gene, test_key, 'cnv', 'png', sep = '.'))
+
+plot(
+  1:nrow(counts),
+  ylim = c(min(counts), max(counts)),
+  type = 'n',
+  xlab = 'Exome number',
+  ylab = 'Read Count',
+  main = paste0(gene, ' (', test_key, ')')
+)
+
+for ( i in unlist(strsplit(ref_key, ',')) ) {
+  lines(
+    1:nrow(counts),
+    counts[, i],
+    col = 'grey'
+  )
+}
+
+lines(
+  1:nrow(counts),
+  counts[, test_key]
+)
+
+points(
+  1:nrow(counts),
+  counts[, test_key],
+  pch = 19,
+  cex = 0.5
+)
+
+for (i in seq_len(nrow(cnv))) {
+with(cnv[i,],
+ {
+  rect(
+    st_exon, 0, ed_exon, max(counts),
+    border = FALSE,
+    col = adjustcolor(ifelse(cnv == 'dup', 'red', 'green'), alpha.f = .2)
+    )
+  })
+}
+cnv
+
+dev.off()

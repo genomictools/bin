@@ -58,3 +58,20 @@ readr::write_tsv(
   d,
   paste(cohort, gene, key, 'cnv', 'tsv', sep = '.')
 )
+
+# plot
+png(paste(cohort, gene, key, 'cnv', 'png', sep = '.'))
+anno <- cnv@annotations
+flank <- 10000
+
+ExomeDepth::plot (
+  cnv,
+  sequence = unique(as.character(anno$chromosome)),
+  xlim = c(min(anno$start) - flank, max(anno$end) + flank),
+  main = paste0(gene, ' (', key, ')'),
+  cex.lab = 0.8,
+  with.gene = TRUE,
+  xlab = unique(as.character(anno$chromosome))
+)
+
+dev.off()

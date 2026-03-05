@@ -63,3 +63,13 @@ readr::write_tsv(
   d,
   paste(cohort, gene, test_key, 'cnv', 'tsv', sep = '.')
 )
+
+# plot
+png(paste(cohort, gene, test_key, 'cnv', 'png', sep = '.'))
+
+exomeCopy::plot.ExomeCopy(
+  cnv,
+  main = paste0(gene, ' (', test_key, ')')
+)
+
+dev.off()

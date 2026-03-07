@@ -9,7 +9,9 @@ exon_coords <- args[3]
 output      <- args[4]
 
 # count
-exon_coords <- rtracklayer::import.bed(exon_coords)
+exon_coords <- unlist(strsplit(exon_coords, ","))
+exon_coords <- purrr::map(exon_coords, rtracklayer::import.bed)
+exon_coords <- do.call(c, exon_coords)
 depth <- bamsignals::bamCount(bam, exon_coords)
 exon_coords$score <- depth
 
@@ -20,7 +22,9 @@ rtracklayer::export.bed(
 )
 
 # coverage
-gene_coords <- rtracklayer::import.bed(gene_coords)
+gene_coords <- unlist(strsplit(gene_coords, ","))
+gene_coords <- purrr::map(gene_coords, rtracklayer::import.bed)
+gene_coords <- do.call(c, gene_coords)
 depth <- bamsignals::bamCoverage(bam, gene_coords)
 
 gr <- GenomicRanges::tile(gene_coords, width = 1)

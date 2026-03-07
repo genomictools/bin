@@ -4,12 +4,12 @@
 args <- commandArgs(trailingOnly = TRUE)
 
 gene    <- args[1]
-feature <- args[2]
-bins    <- args[3]
-species <- args[4]
-genome  <- args[5]
-style   <- args[6]
-output  <- args[7]
+# feature <- args[2]
+bins    <- args[2]
+species <- args[3]
+genome  <- args[4]
+style   <- args[5]
+# output  <- args[6]
 
 # load gene ids
 org <- org.Hs.eg.db::org.Hs.eg.db
@@ -41,19 +41,33 @@ if (genome == 'hg38') txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene::TxDb.Hsapiens.U
 txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene::TxDb.Hsapiens.UCSC.hg38.knownGene
 txdb <- GenomeInfoDb::keepStandardChromosomes(txdb, species = species, pruning.mode="coarse")
 
-if ( feature == 'exon' ) {
-  coords <- GenomicFeatures::exons(txdb, filter = list(gene_id = ids))
-} else if ( feature == 'gene' ) {
-  coords <- GenomicFeatures::genes(txdb, filter = list(gene_id = ids))
-}
+# if ( feature == 'exon' ) {
+#   coords <- GenomicFeatures::exons(txdb, filter = list(gene_id = ids))
+# } else if ( feature == 'gene' ) {
+#   coords <- GenomicFeatures::genes(txdb, filter = list(gene_id = ids))
+# }
 
-GenomeInfoDb::seqlevelsStyle(coords) <- style
-names(GenomicRanges::mcols(coords)) <- 'name'
-coords <- coords[GenomicRanges::width(coords) > 1]
+# gene
+genes <- GenomicFeatures::genes(txdb, filter = list(gene_id = ids))
+GenomeInfoDb::seqlevelsStyle(genes) <- style
+names(GenomicRanges::mcols(genes)) <- 'name'
+genes <- genes[GenomicRanges::width(genes) > 1]
 
 # write file
 rtracklayer::export.bed(
-  coords,
-  output
+  genes,
+  paste(gene, "gene", 'bed', sep = ".")
 )
 
+# exon
+exon <- GenomicFeatures::exons(txdb, filter = list(gene_id = ids))
+
+GenomeInfoDb::seqlevelsStyle(exon) <- style
+names(GenomicRanges::mcols(exon)) <- 'name'
+exon <- exon[GenomicRanges::width(exon) > 1]
+
+# write file
+rtracklayer::export.bed(
+  exon,
+  paste(gene, "exon", 'bed', sep = ".")
+)

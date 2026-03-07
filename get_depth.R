@@ -3,34 +3,33 @@
 # Capture command-line arguments
 args <- commandArgs(trailingOnly = TRUE)
 
-bam     <- args[1]
-coords  <- args[2]
-feature <- args[3]
-output  <- args[4]
+bam         <- args[1]
+gene_coords <- args[2]
+exon_coords <- args[3]
+output      <- args[4]
 
-# load coords
-coords <- rtracklayer::import.bed(coords)
+# count
+exon_coords <- rtracklayer::import.bed(exon_coords)
+depth <- bamsignals::bamCount(bam, exon_coords)
+exon_coords$score <- depth
 
-# calculate depth
-if (feature == "exon") {
-  depth <- bamsignals::bamCount(bam, coords)
-  gr <- coords
-  gr$score <- depth
-} else if (feature == "gene") {
-  depth <- bamsignals::bamCoverage(bam, coords)
-   
-  
-  gr <- GenomicRanges::tile(coords, width = 1)
+# write file
+rtracklayer::export.bed(
+  exon_coords,
+  paste(output, 'count', 'bed', sep = ".")
+)
 
-  gr <- unlist(gr)
-  gr$name <- rep(coords$name, lengths(depth@signals))
-  gr$score <- unlist(depth@signals)
-} else {
-  stop("Invalid feature type. Must be 'exon' or 'gene'.")
-}
+# coverage
+gene_coords <- rtracklayer::import.bed(gene_coords)
+depth <- bamsignals::bamCoverage(bam, gene_coords)
+
+gr <- GenomicRanges::tile(gene_coords, width = 1)
+gr <- unlist(gr)
+gr$name <- rep(gene_coords$name, lengths(depth@signals))
+gr$score <- unlist(depth@signals)
 
 # write file
 rtracklayer::export.bed(
   gr,
-  output
+  paste(output, 'coverage', 'bed', sep = ".")
 )

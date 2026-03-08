@@ -40,13 +40,18 @@ counts$width <- GenomicRanges::width(counts)
 
 # call CNVs
 library(S4Vectors)
-cnv <- exomeCopy::exomeCopy(
-  counts,
-  test_key,
-  # X.names = c("log.bg", "GC", "GC.sq","width"),
-  X.names = c("log.bg", "width"),
-  goto.cnv = as.numeric(prob)
-)
+
+cnv <- lapply(test_key, function(sample.name) {
+  lapply(GenomeInfoDb::seqlevels(counts), function(seq.name) {
+    exomeCopy::exomeCopy(
+      GenomicRanges::sort(counts[GenomeInfoDb::seqnames(counts) == seq.name]),
+      sample.name,
+      # X.names = c("log.bg", "GC", "GC.sq","width"),
+      X.names = c("log.bg", "width"),
+      goto.cnv = as.numeric(prob)
+    )
+  })
+})
 
 # save cnv object
 readr::write_rds(
@@ -55,8 +60,21 @@ readr::write_rds(
 )
 
 # write output to text file
+cnv <- exomeCopy::compileCopyCountSegments(cnv)
+
+ol <- GenomicRanges::findOverlaps(cnv, counts)
+names <- stringr::str_split(counts$name, '\\-', simplify = TRUE)[, 3]
+names <- ifelse(names == 'NA', NA, names)
+
+names <- split(
+  names[S4Vectors::subjectHits(ol)],
+  S4Vectors::queryHits(ol)
+)
+names <- as.character(purrr::map(names, ~paste(na.omit(unique(.x)), collapse = ',')))
+cnv$gene <- names
+
 d <- with(
-  tibble::as_tibble(exomeCopy::copyCountSegments(cnv)),
+  tibble::as_tibble(cnv),
   tibble::tibble(
     seqnames,
     start,
@@ -69,8 +87,8 @@ d <- with(
     ratio = NA,
     stats = log.odds,
     cohort = cohort,
-    key = test_key,
-    gene = gene
+    key = sample.name,
+    gene
   )
 )
 
@@ -80,11 +98,16 @@ readr::write_tsv(
 )
 
 # plot
-png(paste(cohort, gene, test_key, 'cnv', 'png', sep = '.'))
-
-exomeCopy::plot.ExomeCopy(
-  cnv,
-  main = paste0(gene, ' (', test_key, ')')
+purrr::map(
+  GenomeInfoDb::seqlevels(cnv),
+  ~{
+    png(paste(cohort, .x, test_key, 'cnv', 'png', sep = '.'))
+    
+    exomeCopy::plotCompiledCNV(
+      cnv,
+      seq.name = .x
+    )
+    
+    dev.off()
+  }
 )
-
-dev.off()

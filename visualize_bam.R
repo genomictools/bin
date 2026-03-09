@@ -13,10 +13,12 @@ output   <- args[7]
 
 # load regions
 test_cov <- rtracklayer::import.bed(test_cov)
+test_cov <- test_cov[stringr::str_detect(test_cov$name, gene)]
 l <- length(test_cov)
 
 ref_cov <- unlist(strsplit(ref_cov, ','))
 ref_cov <- purrr::map(ref_cov, rtracklayer::import.bed)
+ref_cov <- purrr::map(ref_cov, ~.x[stringr::str_detect(.x$name, gene)])
 names(ref_cov) <- unlist(strsplit(ref_key, ','))
 
 scores <- purrr::map(ref_cov, ~.x$score)

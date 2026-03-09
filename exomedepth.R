@@ -12,6 +12,11 @@ prob   <- args[6]
 
 # load tests
 test <- rtracklayer::import.bed(test)
+names <- stringr::str_split(test$name, '\\-', simplify = TRUE)[, 3]
+names <- paste0(
+  names,
+  '-0_',
+  unname(unlist(purrr::map(table(names), ~seq(1, .x)))))
 
 # load ref
 ref <- unlist(strsplit(ref, ','))
@@ -39,7 +44,7 @@ cnv <- ExomeDepth::CallCNVs(
   chromosome = as.character(GenomicRanges::seqnames(test)),
   start = GenomicRanges::start(test),
   end = GenomicRanges::end(test),
-  name = paste(gene, '-0_', 1:length(test))
+  name = names
 )
 
 # save cnv object
@@ -55,6 +60,7 @@ colnames(d) <- c(
   'exon_start','exon_end','cn','cov','norm_cov','ratio','stats',
   'cohort','key','gene'
 )
+
 if (nrow(cnv@CNV.calls) > 0) {
   d <- with(
     tibble::as_tibble(cnv@CNV.calls),
@@ -75,6 +81,18 @@ if (nrow(cnv@CNV.calls) > 0) {
     )
   )
   d <- dplyr::mutate(d, cn = ifelse(cn == 'deletion', 1, 3))
+  
+  gr <- GenomicRanges::makeGRangesFromDataFrame(cnv@CNV.calls)
+  ol <- GenomicRanges::findOverlaps(gr, test)
+  names <- stringr::str_split(test$name, '\\-', simplify = TRUE)[, 3]
+  names <- ifelse(names == 'NA', NA, names)
+  names <- split(
+    names[S4Vectors::subjectHits(ol)],
+    S4Vectors::queryHits(ol)
+  )
+  
+  d$gene <- as.character(purrr::map(names, ~na.omit(unique(.x))))
+  
 } else {
   d <- na.omit(d)
 }
@@ -85,18 +103,20 @@ readr::write_tsv(
 )
 
 # plot
-png(paste(cohort, gene, key, 'cnv', 'png', sep = '.'))
-anno <- cnv@annotations
 flank <- 10000
 
-ExomeDepth::plot (
-  cnv,
-  sequence = unique(as.character(anno$chromosome)),
-  xlim = c(min(anno$start) - flank, max(anno$end) + flank),
-  main = paste0(gene, ' (', key, ')'),
-  cex.lab = 0.8,
-  with.gene = TRUE,
-  xlab = unique(as.character(anno$chromosome))
-)
-
-dev.off()
+for (g in unique(d$gene)) {
+  png(paste(cohort, g, key, 'cnv', 'png', sep = '.'))
+  seg_cnv <- dplyr::filter(d, gene == g)
+  ExomeDepth::plot (
+    cnv,
+    sequence = unique(as.character(seg_cnv$seqnames)),
+    xlim = c(min(seg_cnv$start) - flank, max(seg_cnv$end) + flank),
+    main = paste0(g, ' (', key, ')'),
+    cex.lab = 0.8,
+    with.gene = TRUE,
+    xlab = unique(as.character(seg_cnv$seqnames))
+  )
+  
+  dev.off()
+}

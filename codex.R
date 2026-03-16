@@ -12,8 +12,8 @@ ref     <- args[6]
 
 # load tests
 test <- rtracklayer::import.bed(test)
-test$gc <- rnorm(length(test), 0.5, .1)
-test$mapp <- rnorm(length(test), 0.8, .1)
+set.seed(1234); test$gc <- rnorm(length(test), 0.5, .1)
+set.seed(4321); test$mapp <- rnorm(length(test), 0.8, .1)
 
 # load ref
 ref <- unlist(strsplit(ref, ','))

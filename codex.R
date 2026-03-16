@@ -9,11 +9,15 @@ test_key<- args[3]
 test    <- args[4]
 ref_key <- args[5]
 ref     <- args[6]
+gc      <- args[7]
+pmap    <- args[8]
 
 # load tests
 test <- rtracklayer::import.bed(test)
-set.seed(1234); test$gc <- rnorm(length(test), 0.5, .1)
-set.seed(4321); test$mapp <- rnorm(length(test), 0.8, .1)
+gc <- readr::read_csv(gc)
+pmap <- readr::read_csv(pmap)
+test$gc <- gc$score
+test$mapp <- pmap$score
 
 # load ref
 ref <- unlist(strsplit(ref, ','))

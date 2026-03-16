@@ -17,7 +17,9 @@ test_key    <- args[3]
 test_counts <- args[4]
 ref_key     <- args[5]
 ref_counts  <- args[6]
-prob        <- args[7]
+gc          <- args[7]
+pmap        <- args[8]
+prob        <- args[9]
 
 # load references
 ref_counts <- purrr::map(unlist(strsplit(ref_counts, ',')), rtracklayer::import.bed)
@@ -33,10 +35,13 @@ GenomicRanges::mcols(counts) <- cbind(
   ref_counts
 )
 
+gc <- rtracklayer::import.bed(gc)
+
 # generate background
 counts$bg <- as.numeric(exomeCopy::generateBackground(unlist(strsplit(ref_key, ',')), counts, median))
 counts$log.bg <- log(counts$bg + .1)
 counts$width <- GenomicRanges::width(counts)
+counts$gc <- gc$score
 
 # call CNVs
 library(S4Vectors)
@@ -47,7 +52,7 @@ cnv <- lapply(test_key, function(sample.name) {
       GenomicRanges::sort(counts[GenomeInfoDb::seqnames(counts) == seq.name]),
       sample.name,
       # X.names = c("log.bg", "GC", "GC.sq","width"),
-      X.names = c("log.bg", "width"),
+      X.names = c("log.bg", "width", "gc"),
       goto.cnv = as.numeric(prob)
     )
   })

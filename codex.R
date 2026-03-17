@@ -6,16 +6,17 @@ args <- commandArgs(trailingOnly = TRUE)
 cohort  <- args[1]
 gene    <- args[2]
 test_key<- args[3]
-test    <- args[4]
-ref_key <- args[5]
-ref     <- args[6]
-gc      <- args[7]
-pmap    <- args[8]
+tool    <- args[4]
+test    <- args[5]
+ref_key <- args[6]
+ref     <- args[7]
+gc      <- args[8]
+pmap    <- args[9]
 
 # load tests
 test <- rtracklayer::import.bed(test)
-gc <- readr::read_csv(gc)
-pmap <- readr::read_csv(pmap)
+gc <- rtracklayer::import.bed(gc)
+pmap <- rtracklayer::import.bed(pmap)
 test$gc <- gc$score
 test$mapp <- pmap$score
 
@@ -105,7 +106,8 @@ for (chr_name in names(chr_indices)) {
       stats = mBIC,
       cohort = cohort,
       key = test_key,
-      gene = gene
+      gene = gene,
+      tool = tool
     )
   )
 }
@@ -127,7 +129,8 @@ if (length(cnv_list) > 0) {
     stats = numeric(),
     cohort = character(),
     key = character(),
-    gene = character()
+    gene = character(),
+    tool = character()
   )
 }
 cnv <- dplyr::filter(cnv, end - start > 1)
@@ -143,7 +146,7 @@ cnv$gene <- as.character(purrr::map(names, ~na.omit(unique(.x))))
 
 readr::write_tsv(
   cnv,
-  paste(cohort, gene, test_key, 'cnv', 'tsv', sep = '.')
+  paste(cohort, gene, test_key, tool, 'cnv', 'tsv', sep = '.')
 )
 
 # plot
@@ -151,7 +154,7 @@ for( g in unique(cnv$gene)) {
   seg_cnv <- dplyr::filter(cnv, gene == g)
   seg_counts <- counts[stringr::str_detect(test$name, g),]
 
-  png(paste(cohort, g, test_key, 'cnv', 'png', sep = '.'))
+  png(paste(cohort, g, test_key, tool, 'cnv', 'png', sep = '.'))
   
   plot(
     1:nrow(seg_counts),

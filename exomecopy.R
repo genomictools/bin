@@ -14,12 +14,13 @@ if (!exists('Rle', mode = 'function')) {
 cohort      <- args[1]
 gene        <- args[2]
 test_key    <- args[3]
-test_counts <- args[4]
-ref_key     <- args[5]
-ref_counts  <- args[6]
-gc          <- args[7]
-pmap        <- args[8]
-prob        <- args[9]
+tool        <- args[4]
+test_counts <- args[5]
+ref_key     <- args[6]
+ref_counts  <- args[7]
+gc          <- args[8]
+pmap        <- args[9]
+prob        <- args[10]
 
 # load references
 ref_counts <- purrr::map(unlist(strsplit(ref_counts, ',')), rtracklayer::import.bed)
@@ -38,10 +39,15 @@ GenomicRanges::mcols(counts) <- cbind(
 gc <- rtracklayer::import.bed(gc)
 
 # generate background
-counts$bg <- as.numeric(exomeCopy::generateBackground(unlist(strsplit(ref_key, ',')), counts, median))
-counts$log.bg <- log(counts$bg + .1)
-counts$width <- GenomicRanges::width(counts)
-counts$gc <- gc$score
+bg = as.numeric(exomeCopy::generateBackground(unlist(strsplit(ref_key, ',')), counts, median))
+
+GenomicRanges::mcols(counts) <- cbind(
+  GenomicRanges::mcols(counts),
+  bg = bg,
+  log.bg = log(bg + .1),
+  width = GenomicRanges::width(counts),
+  gc = gc$score
+)
 
 # call CNVs
 library(S4Vectors)
@@ -51,7 +57,6 @@ cnv <- lapply(test_key, function(sample.name) {
     exomeCopy::exomeCopy(
       GenomicRanges::sort(counts[GenomeInfoDb::seqnames(counts) == seq.name]),
       sample.name,
-      # X.names = c("log.bg", "GC", "GC.sq","width"),
       X.names = c("log.bg", "width", "gc"),
       goto.cnv = as.numeric(prob)
     )
@@ -61,7 +66,7 @@ cnv <- lapply(test_key, function(sample.name) {
 # save cnv object
 readr::write_rds(
   cnv,
-  paste(cohort, gene, test_key, 'cnv', 'rds', sep = '.')
+  paste(cohort, gene, test_key, tool,  'cnv', 'rds', sep = '.')
 )
 
 # write output to text file
@@ -93,20 +98,21 @@ d <- with(
     stats = log.odds,
     cohort = cohort,
     key = sample.name,
-    gene
+    gene,
+    tool = tool
   )
 )
 
 readr::write_tsv(
   d,
-  paste(cohort, gene, test_key, 'cnv', 'tsv', sep = '.')
+  paste(cohort, gene, test_key, tool, 'cnv', 'tsv', sep = '.')
 )
 
 # plot
 purrr::map(
   GenomeInfoDb::seqlevels(cnv),
   ~{
-    png(paste(cohort, .x, test_key, 'cnv', 'png', sep = '.'))
+    png(paste(cohort, .x, test_key, tool, 'cnv', 'png', sep = '.'))
     
     exomeCopy::plotCompiledCNV(
       cnv,

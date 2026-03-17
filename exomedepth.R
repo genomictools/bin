@@ -6,9 +6,10 @@ args <- commandArgs(trailingOnly = TRUE)
 cohort <- args[1]
 gene   <- args[2]
 key    <- args[3]
-test   <- args[4]
-ref    <- args[5]
-prob   <- args[6]
+tool   <- args[4]
+test   <- args[5]
+ref    <- args[6]
+prob   <- args[7]
 
 # load tests
 test <- rtracklayer::import.bed(test)
@@ -50,7 +51,7 @@ cnv <- ExomeDepth::CallCNVs(
 # save cnv object
 readr::write_rds(
   cnv,
-  paste(cohort, gene, key, 'cnv', 'rds', sep = '.')
+  paste(cohort, gene, key, tool, 'cnv', 'rds', sep = '.')
 )
 
 # write output to text file
@@ -77,7 +78,8 @@ if (nrow(cnv@CNV.calls) > 0) {
       stats = BF,
       cohort = cohort,
       key = key,
-      gene = gene
+      gene = gene,
+      tool = tool
     )
   )
   d <- dplyr::mutate(d, cn = ifelse(cn == 'deletion', 1, 3))
@@ -99,14 +101,14 @@ if (nrow(cnv@CNV.calls) > 0) {
 
 readr::write_tsv(
   d,
-  paste(cohort, gene, key, 'cnv', 'tsv', sep = '.')
+  paste(cohort, gene, key, tool, 'cnv', 'tsv', sep = '.')
 )
 
 # plot
 flank <- 10000
 
 for (g in unique(d$gene)) {
-  png(paste(cohort, g, key, 'cnv', 'png', sep = '.'))
+  png(paste(cohort, g, key, tool, 'cnv', 'png', sep = '.'))
   seg_cnv <- dplyr::filter(d, gene == g)
   ExomeDepth::plot (
     cnv,

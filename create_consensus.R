@@ -4,9 +4,9 @@
 args <- commandArgs(trailingOnly = TRUE)
 
 cnv   <- args[1]
-cn    <- as.integer(args[2])
-ratio <- as.numeric(args[3])
-stats <- as.integer(args[4])
+cn    <- args[2]
+ratio <- args[3]
+stats <- args[4]
 output<- args[5]
 
 # load library

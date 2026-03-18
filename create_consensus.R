@@ -7,14 +7,18 @@ cnv   <- args[1]
 cn    <- args[2]
 ratio <- args[3]
 stats <- args[4]
-output<- args[5]
+style <- args[5]
+output<- args[6]
 
 # load library
 library(GenomicRanges)
 
 # load cnvs
 cnv   <- unlist(strsplit(cnv, ','))
-cnv <- purrr::map_df(cnv, readr::read_tsv)
+cnv <- purrr::map(cnv, readr::read_tsv)
+cnv <- purrr::map(cnv, ~GenomicRanges::makeGRangesFromDataFrame(.x, keep.extra.columns = TRUE))
+cnv <- purrr::map(cnv, ~{x <- .x; GenomeInfoDb::seqlevelsStyle(x) <- style; x})
+cnv <- purrr::map_df(cnv, tibble::as_tibble)
 cnv <- dplyr::rename(cnv, state = cn)
 
 # filter cnvs

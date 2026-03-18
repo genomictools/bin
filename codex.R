@@ -142,7 +142,7 @@ names <- split(
   names[S4Vectors::subjectHits(ol)],
   S4Vectors::queryHits(ol)
 )
-cnv$gene <- as.character(purrr::map(names, ~na.omit(unique(.x))))
+cnv$gene <- as.character(purrr::map(names, ~paste(na.omit(unique(.x)), collapse = ',')))
 
 readr::write_tsv(
   cnv,

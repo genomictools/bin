@@ -55,11 +55,11 @@ readr::write_rds(
 )
 
 # write output to text file
-d <- tibble::as_tibble(matrix(ncol = 13))
+d <- tibble::as_tibble(matrix(ncol = 14))
 colnames(d) <- c(
   'seqnames','start','end',
   'exon_start','exon_end','cn','cov','norm_cov','ratio','stats',
-  'cohort','key','gene'
+  'cohort','key','gene','tool'
 )
 
 if (nrow(cnv@CNV.calls) > 0) {
@@ -93,7 +93,7 @@ if (nrow(cnv@CNV.calls) > 0) {
     S4Vectors::queryHits(ol)
   )
   
-  d$gene <- as.character(purrr::map(names, ~na.omit(unique(.x))))
+  d$gene <- as.character(purrr::map(names, ~paste(na.omit(unique(.x)), collapse = ',')))
   
 } else {
   d <- na.omit(d)

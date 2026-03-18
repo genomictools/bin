@@ -3,12 +3,13 @@
 # Capture command-line arguments
 args <- commandArgs(trailingOnly = TRUE)
 
-cnv   <- args[1]
-cn    <- args[2]
-ratio <- args[3]
-stats <- args[4]
-style <- args[5]
-output<- args[6]
+cnv    <- args[1]
+ccn    <- args[2]
+cratio <- args[3]
+cstats <- args[4]
+cwidth <- args[5]
+style  <- args[6]
+output <- args[7]
 
 # load library
 library(GenomicRanges)
@@ -22,16 +23,17 @@ cnv <- purrr::map_df(cnv, tibble::as_tibble)
 cnv <- dplyr::rename(cnv, state = cn)
 
 # filter cnvs
-cnv <- dplyr::filter(cnv, state != as.integer(cn))
-cnv <- dplyr::filter(cnv, ratio < as.numeric(ratio) | ratio > as.numeric(ratio) + 1 | is.na(ratio))
-cnv <- dplyr::filter(cnv, stats > as.numeric(stats) | is.na(stats))
+cnv <- dplyr::filter(cnv, state != as.integer(ccn))
+cnv <- dplyr::filter(cnv, ratio < (1 - as.numeric(cratio)) | ratio > (1 + as.numeric(cratio)) | is.na(ratio))
+cnv <- dplyr::filter(cnv, stats > as.numeric(cstats) | is.na(stats))
+cnv <- dplyr::filter(cnv, width < as.integer(cwidth))
 
 # convert to granges
 gr <- GenomicRanges::makeGRangesFromDataFrame(cnv, keep.extra.columns = TRUE)
-grl <- split(gr, gr$tool)
+grl <- split(gr, gr$key)
 
 # find recurrent ranges
-ro <- CNVRanger::populationRanges(grl)
+ro <- CNVRanger::populationRanges(grl, mode = 'RO')
 
 # find overlap with original ranges
 ol <- GenomicRanges::findOverlaps(ro, gr)

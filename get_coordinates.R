@@ -4,10 +4,11 @@
 args <- commandArgs(trailingOnly = TRUE)
 
 gene    <- args[1]
-bins    <- args[2]
-species <- args[3]
-genome  <- args[4]
-style   <- args[5]
+genelist<- args[2]
+bins    <- args[3]
+species <- args[4]
+genome  <- args[5]
+style   <- args[6]
 
 # load databases
 if (genome == 'hg38') txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene::TxDb.Hsapiens.UCSC.hg38.knownGene
@@ -16,16 +17,16 @@ txdb <- GenomeInfoDb::keepStandardChromosomes(txdb, species = species, pruning.m
 org <- org.Hs.eg.db::org.Hs.eg.db
 
 # load gene ids
-keys <- switch (gene,
-  'reference'  = {
-    set.seed(1234)
-    sample(
-      AnnotationDbi::keys(org, keytype = 'SYMBOL'),
-      as.integer(bins)
-    )
-  },
-  gene
-)
+genelist <- readr::read_lines(genelist)
+if (length(genelist) == 0) {
+  set.seed(1234)
+  keys <- sample(
+    AnnotationDbi::keys(org, keytype = 'SYMBOL'),
+    as.integer(bins)
+  )
+} else {
+  keys <- genelist
+}
 
 ids <- AnnotationDbi::select(
   org,

@@ -105,19 +105,23 @@ readr::write_tsv(
 )
 
 # plot
-flank <- 10000
-
 for (g in unique(d$gene)) {
+  anno <- dplyr::filter(cnv@annotations, stringr::str_detect(name, g))
+  anno <- c(min(anno$start), max(anno$end))
+  flank <- (anno[2] - anno[1])/2
+  xlim <- c(anno[1] - flank, anno[2] + flank)
+
   png(paste(cohort, g, key, tool, 'cnv', 'png', sep = '.'))
   seg_cnv <- dplyr::filter(d, gene == g)
-  ExomeDepth::plot (
+  ExomeDepth::plot(
     cnv,
     sequence = unique(as.character(seg_cnv$seqnames)),
-    xlim = c(min(seg_cnv$start) - flank, max(seg_cnv$end) + flank),
+    xlim = xlim,
     main = paste0(g, ' (', key, ')'),
     cex.lab = 0.8,
     with.gene = TRUE,
-    xlab = unique(as.character(seg_cnv$seqnames))
+    xlab = unique(as.character(seg_cnv$seqnames)),
+    count.threshold = 0
   )
   
   dev.off()

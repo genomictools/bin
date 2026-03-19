@@ -11,8 +11,7 @@ genome  <- args[5]
 style   <- args[6]
 
 # load databases
-if (genome == 'hg38') txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene::TxDb.Hsapiens.UCSC.hg38.knownGene
-txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene::TxDb.Hsapiens.UCSC.hg38.knownGene
+if (genome == 'hg38') txdb <- TxDb.Hsapiens.UCSC.hg38.refGene::TxDb.Hsapiens.UCSC.hg38.refGene
 txdb <- GenomeInfoDb::keepStandardChromosomes(txdb, species = species, pruning.mode="coarse")
 org <- org.Hs.eg.db::org.Hs.eg.db
 
@@ -41,7 +40,16 @@ for ( feature in c('gene', 'exon')) {
   gr <- switch(
     feature,
     'gene' = GenomicFeatures::genes(txdb, filter = list(gene_id = ids$ENTREZID)),
-    'exon' = GenomicFeatures::exons(txdb, filter = list(gene_id = ids$ENTREZID), columns = c('gene_id', 'exon_id'))
+    'exon' = {
+      gr <- GenomicFeatures::exons(txdb, filter = list(gene_id = ids$ENTREZID), columns = c('gene_id', 'exon_id', 'tx_name'))
+      
+      tx <- as.list(gr$tx_name)
+      dup <- duplicated(tx)
+      nr <- as.logical(purrr::map(tx, ~all(stringr::str_detect(.x, 'NR'))))
+      gr <- gr[!dup & !nr]
+      GenomicRanges::mcols(gr) <- GenomicRanges::mcols(gr)[, c('gene_id', 'exon_id')]
+      gr
+    }
   )
 
   # modify object style, remove ranges with width 0

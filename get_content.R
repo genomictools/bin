@@ -12,7 +12,9 @@ style   <- args[4]
 if ( genome == 'hg38') {
   bsgenome <- BSgenome.Hsapiens.UCSC.hg38::BSgenome.Hsapiens.UCSC.hg38
 }
-
+if ( genome == 'hg19') {
+  bsgenome <- BSgenome.Hsapiens.UCSC.hg19::BSgenome.Hsapiens.UCSC.hg19
+}
 # get gc
 library(CODEX2)
 gc <- unlist(strsplit(coords, ","))

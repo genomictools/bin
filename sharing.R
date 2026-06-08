@@ -20,7 +20,7 @@ anno <- dplyr::select(anno, variant, gene = SYMBOL, ensembl = Gene, IMPACT, Cons
 
 # cases
 cases <- readr::read_lines(cases)
-cases <- stringr::str_split(cases, '_', simplify = TRUE)[, 2]
+# cases <- stringr::str_split(cases, '_', simplify = TRUE)[, 2]
 
 # pedigree
 clusters <- tibble::tibble(

@@ -11,7 +11,7 @@ ped_file <- args[5]
 
 # cases
 cases <- readr::read_lines(cases)
-cases <- stringr::str_split(cases, '_', simplify = TRUE)[, 2]
+# cases <- stringr::str_split(cases, '_', simplify = TRUE)[, 2]
 
 # rlist
 rlist <- readr::read_delim(rlist, delim = ' ', col_names = c('variant', 'genotype', 'alt', 'ref'))

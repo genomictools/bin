@@ -4,13 +4,12 @@
 args <- commandArgs(trailingOnly = TRUE)
 
 famid    	<- args[1]
-category    <- args[2]
-ped_file	<- args[3]
-affected    <- args[4]
-carrier	    <- args[5]
-starred	    <- args[6]
-gene 	    <- args[7]
-variant 	<- args[8]
+ped_file	<- args[2]
+affected    <- args[3]
+carrier	    <- args[4]
+starred	    <- args[5]
+gene 	    <- args[6]
+variant 	<- args[7]
 
 # Load data
 pedigree <- pedtools::readPed(ped_file)
@@ -19,7 +18,7 @@ carrier  <- readr::read_lines(carrier)
 starred  <- readr::read_lines(starred)
 size <- pedtools::pedsize(pedigree)
 size <- max(4, size / 1.5)
-file_name <- paste(famid, category, gene, "png", sep = '.')
+file_name <- paste(famid, gene, "png", sep = '.')
 
 # Extract marker names
 markers <- unlist(strsplit(variant, split = ','))

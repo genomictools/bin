@@ -4,17 +4,17 @@
 args <- commandArgs(trailingOnly = TRUE)
 
 famid    <- args[1]
-category <- args[2]
-rlist    <- args[3]
-cases    <- args[4]
-ped_file <- args[5]
+rlist    <- args[2]
+cases    <- args[3]
+ped_file <- args[4]
 
 # cases
 cases <- readr::read_lines(cases)
 # cases <- stringr::str_split(cases, '_', simplify = TRUE)[, 2]
 
 # rlist
-rlist <- readr::read_delim(rlist, delim = ' ', col_names = c('variant', 'genotype', 'alt', 'ref'))
+rlist <- unlist(strsplit(rlist, ','))
+rlist <- purrr::map_df(rlist, ~readr::read_delim(.x, delim = ' ', col_names = c('variant', 'genotype', 'alt', 'ref')))
 rlist <- tidyr::unite(rlist, samples, dplyr::starts_with('X'), sep = ' ')
 rlist <- dplyr::mutate(rlist, samples = purrr::map_chr(stringr::str_split(samples, ' '), ~{paste(intersect(cases, unlist(.x)), collapse = ',')}))
 rlist <- dplyr::select(rlist, variant, genotype, samples)
@@ -53,7 +53,7 @@ mms <- purrr::imap(rlist, ~{
 
 pdg2 <- pedtools::setMarkers(pdg, mms)
 
-out_file <- paste(famid, category, 'marked', sep = '.')
+out_file <- paste(famid, 'marked', sep = '.')
 pedtools::writePed(pdg2, out_file)
 
 aff  <- readr::read_delim(ped_file, col_select = c(2,6), col_names = FALSE)
